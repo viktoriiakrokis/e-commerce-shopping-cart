@@ -3,14 +3,17 @@ import logo from './logo.svg'
 import './App.css'
 import Products from './components/Products'
 import Filter from '../src/components/Filter'
+import Backet from '../src/components/Backet'
 
 class App extends React.Component {
     constructor(props) {
         super(props)
-        this.state = { products: [], filteredProducts: []}
+        this.state = { products: [], filteredProducts: [], cartItems: []}
 
         this.handleChangeSort = this.handleChangeSort.bind(this)
         this.handleChangeSize = this.handleChangeSize.bind(this)
+        this.handleAddToCart = this.handleAddToCart.bind(this)
+        this.handleRemoveFromCart = this.handleRemoveFromCart.bind(this)
     }
 
     componentWillMount(){
@@ -19,6 +22,10 @@ class App extends React.Component {
             products: data,
             filteredProducts: data
         }));
+
+        if(localStorage.getItem('cartItems')){
+            this.setState({cartItems: JSON.parse(localStorage.getItem('cartItems'))})
+        }
     }
 
     handleChangeSort(e) {
@@ -48,6 +55,34 @@ class App extends React.Component {
         })
     }
 
+    handleAddToCart(e, product){
+        this.setState(state =>{
+            const cartItems = state.cartItems
+            let productAlreadyInCart = false
+            cartItems.forEach(item => {
+                if(item.id === product.id) {
+                    productAlreadyInCart = true
+                    item.count++
+                }
+            })
+
+            if(!productAlreadyInCart) {
+                cartItems.push(...product, {count:1})
+            }
+
+            localStorage.setItem("cartItems", JSON.stringify(cartItems))
+            return cartItems
+        })
+    }
+
+    handleRemoveFromCart(e, item) {
+        this.setState(state => {
+            const cartItems = state.cartItems.filter(elm =>elm.id != item.id)
+            localStorage.setItem('cartItem', cartItems)
+            return {cartItems}
+        })
+    }
+
     render() {
         return (
             <div className="container">
@@ -59,7 +94,9 @@ class App extends React.Component {
                         <hr/>
                         <Products products={this.state.filteredProducts} handleAddToCart={this.handleAddToCart}/>
                     </div>
-                    <div className="col-md-4"></div>
+                    <div className="col-md-4">
+                        <Backet  cartItems={this.state.cartItems} handleRemoveFromCart={this.handleRemoveFromCart}/>
+                    </div>
                 </div>
             </div>
         );
